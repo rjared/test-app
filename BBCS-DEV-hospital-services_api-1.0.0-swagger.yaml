@@ -1,0 +1,1221 @@
+openapi: 3.0.0
+info:
+  title: Hospital Gateway API
+  description: This is the BBCS Hospital Gateway API
+  contact:
+    email: rjared@bbcsinc.com
+  license:
+    name: tbd
+    url: 'http://www.bbcsinc.com/tbd'
+  version: 1.0.0
+servers:
+  - url: '{server}/api-gateway/hospital/v1/'
+    description: Server
+  - url: 'https://virtserver.swaggerhub.com/rjared-dev/hospital-service/1.0.0'
+    description: SwaggerHub API Auto Mocking
+
+tags:
+  - name: 'Patient Inquiry'
+    description: 'Patient Inquiry (030)'
+  - name: Auto / Directed
+    description: Auto / Directed Inventory Inquiry (074) - used by Inventory Distribution Staff, and/or by Transfusion Laboratory Technicians to display and review records for autologous, directed, designated, or dedicated units in active inventory
+  - name: Product Import
+    description: Product Import (110) - used by the Inventory Distribution staff to provide a method by which the user can record purchased and non-drawn inventory into the database and to correctly document patient information for designated inventory
+  - name: Product Distribution
+    description: Product Distribution (120)- used by the Inventory Distribution staff to provide a method for the user to transfer product inventory from one location to another without the requirement of order creation.
+  - name: Boxed Product Distribution
+    description: Boxed Product Distribution (190)
+  - name: Pharmaceutical Product Processing 
+    description: Pharmaceutical Product Processing (195) -used by the Inventory Distribution staff to provide a method for the user to receive and ship pharmaceutical products and/or supplies.
+  - name: Daily Product Distribution Report
+    description: a report function used by the Inventory Distribution staff to provide a method for daily review of the products transferred from one location to another.
+  - name: Imported Product Report
+    description: Imported Product Report (333)
+  - name: Stock Order Processing
+    description: Stock Order Processing (424)
+  - name: Order Distribution
+    description: Order Distribution (425)
+paths:
+  '/patients/{id}/patient-inquiry':
+    get:
+      tags:
+        - 'Patient Inquiry'
+      summary: get patient summary information
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            minimum: 1
+            type: integer
+      responses:
+        '200':
+          description: results matching criteria
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PatientInquiry'
+        '404':
+          description: patient not found
+  '/patients/{id}/orders':
+    get:
+      tags:
+        - 'Patient Inquiry'
+      summary: get orders for the given patient
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            minimum: 1
+            type: integer
+        - name: count
+          in: query
+          required: false
+          schema:
+            minimum: 1
+            default: 50
+            type: integer
+            format: int32
+        - name: page
+          in: query
+          required: false
+          schema:
+            minimum: 1
+            default: 1
+            type: integer
+            format: int32
+      responses:
+        '200':
+          description: results matching criteria
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Order'
+        '404':
+          description: patient not found
+  '/patients/{id}/shipped-summary':
+    get:
+      tags:
+        - 'Patient Inquiry'
+      summary: get shipped product history for the given patient
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            minimum: 1
+            type: integer
+            format: int32
+      responses:
+        '200':
+          description: results matching criteria
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProductSummary'
+        '404':
+          description: patient not found
+  '/patients/{id}/shipped-detail/{product}':
+    get:
+      tags:
+        - 'Patient Inquiry'
+      summary: get shipped detail history for the given patients
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            minimum: 1
+            type: integer
+            format: int3
+        - name: product
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: shipmentDate
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: results matching criteria
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShippedDetail'
+        '404':
+          description: patient not found
+  '/patients/{id}/transfusion-history':
+    get:
+      tags:
+        - 'Patient Inquiry'
+      summary: get transfusion history for the given patients
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            minimum: 1
+            type: integer
+            format: int32
+        - name: count
+          in: query
+          required: false
+          schema:
+            minimum: 1
+            default: 50
+            type: integer
+            format: int32
+        - name: page
+          in: query
+          required: false
+          schema:
+            minimum: 1
+            default: 1
+            type: integer
+            format: int32
+      responses:
+        '200':
+          description: results matching criteria
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransfustionHistoryItem'
+        '404':
+          description: patient not found
+  '/patients/{id}/inventory-inquiry':
+    get:
+      tags:
+        - Auto / Directed
+      summary: get AUTO/DIR inventory for the given patient
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            minimum: 1
+            type: integer
+            format: int32
+      responses:
+        '200':
+          description: results matching criteria
+        '404':
+          description: patient not found
+  '/donors/{id}/inventory-inquiry':
+    get:
+      tags:
+        - Auto / Directed
+      summary: get AUTO/DIR inventory for the given donor
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            minimum: 1
+            type: integer
+            format: int32
+      responses:
+        '200':
+          description: results matching criteria
+        '404':
+          description: patient not found
+  '/inventory-summary':
+    get:
+      tags:
+        - Auto / Directed
+      summary: get AUTO/DIR inventory summary by date range, location, status
+      parameters:
+        - name: from
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: to
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: location
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: type
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: status
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: results matching criteria
+        '404':
+          description: patient not found
+  '/import-products':
+    get:
+      tags:
+        - Product Import
+      summary: get screen defaults
+      responses:
+        '200':
+          description: default values
+    post:
+      tags:
+        - Product Import
+      summary: import a product      
+      parameters: 
+        - in: query
+          name: edit-only
+          schema:
+            type: string
+          description: perform edits only, do not commit.
+      responses:
+        '200':
+          description: success
+        '406':
+          description: the request is invalid
+  '/product-distribution/distribute':
+    post:
+      tags:
+        - Product Distribution
+      summary: distribute products
+      requestBody:
+        $ref: '#/components/requestBodies/Products'
+      responses:
+        '200':
+          description: success
+        '406':
+          description: the request is invalid
+  '/product-distribution/edit':
+    post:
+      tags:
+        - Product Distribution
+      summary: to edit the product distribution request
+      requestBody:
+        $ref: '#/components/requestBodies/Products'
+      responses:
+        '200':
+          description: the request is valid
+        '406':
+          description: the request is invalid
+  '/product-distribution/editAddProduct':
+    post:
+      tags:
+        - Product Distribution
+      summary: to edit the product distribution request
+      requestBody:
+        $ref: '#/components/requestBodies/Products'
+      responses:
+        '200':
+          description: the request is valid
+        '406':
+          description: the request is invalid
+  '/boxes':
+    get:
+      tags:
+        - Boxed Product Distribution 
+      summary: get all boxes
+      parameters: 
+        - in: query
+          name: product
+          schema:
+            type: string
+          description: filter by product code
+      responses:
+        '200':
+          description: results matching criteria
+        '404':
+          description: product not found  
+    post:
+      tags:
+        - Boxed Product Distribution 
+      summary: Create a new box
+      responses:
+        '200':
+          description: box created
+        '406':
+          description: the request is invalid
+  '/boxes/{boxID}':
+    get:
+      tags:
+        - Boxed Product Distribution
+      summary: get a box by id
+      parameters:
+        - name: boxID
+          in: path
+          required: true
+          schema:
+            minimum: 1
+            type: string
+      responses:
+        '200':
+          description: box found
+        '404':
+          description: box id not found
+  '/boxes/{boxID}/box-detail':
+    get:
+      tags:
+        - Boxed Product Distribution
+      summary: return all data for detail screen
+      parameters:
+        - name: boxID
+          in: path
+          required: true
+          schema:
+            minimum: 1
+            type: string
+      responses:
+        '200':
+          description: the request is valid
+        '404':
+          description: box id not found
+  '/boxes/{boxID}/products':
+    patch:
+      tags:
+        - Boxed Product Distribution
+      summary: add or remove a product to a box
+      parameters:
+        - name: boxID
+          in: path
+          required: true
+          schema:
+            minimum: 1
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Product'
+      responses:
+        '200':
+          description: success
+        '404':
+          description: Box not found
+        '406':
+          description: the request is invalid
+  '/pharmaceuticals':
+    get:
+      tags:
+        - Pharmaceutical Product Processing
+      summary: get all pharmaceutical products
+      parameters: 
+        - in: query
+          name: product
+          schema:
+            type: string
+          description: filter by product code
+      responses:
+        '200':
+          description: results matching criteria
+        '404':
+          description: product not found
+    post:
+      tags:
+        - Pharmaceutical Product Processing 
+      summary: Add a Pharmaceutical
+      responses:
+        '200':
+          description: Pharmaceutical created
+        '406':
+          description: the request is invalid
+  '/pharmaceuticals/{productCode}/lots/':
+    get:
+      tags:
+        - Pharmaceutical Product Processing
+      summary: get lots for the product
+      parameters: 
+        - in: path
+          name: productCode
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ok
+        '404':
+          description: product not found
+    post:
+      tags:
+        - Pharmaceutical Product Processing
+      summary: create a lot
+      parameters: 
+        - in: path
+          name: productCode
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: lot created
+        '406':
+          description: the request is invalid
+  '/pharmaceuticals/{productCode}/lots/{lotNumber}':
+    get:
+      tags:
+        - Pharmaceutical Product Processing
+      summary: get a specific lot for the product
+      parameters: 
+        - in: path
+          name: productCode
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: lotNumber
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ok
+        '404':
+          description: product not found
+  '/pharmaceuticals/{productCode}/lots/{lotNumber}/lot-history':
+    get:
+      tags:
+        - Pharmaceutical Product Processing
+      summary: get all detail transactions for the selected lot
+      parameters: 
+        - in: path
+          name: productCode
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: lotNumber
+          required: true
+          schema:
+            type: string
+          description: filter by product code
+      responses:
+        '200':
+          description: results matching criteria
+        '404':
+          description: product not found
+  '/pharmaceuticals/{productCode}/lots/{lotNumber}/issue':
+    post:
+      tags:
+        - Pharmaceutical Product Processing 
+      summary: issue products from one inventory location to another
+      parameters: 
+        - in: path
+          name: productCode
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: lotNumber
+          required: true
+          schema:
+            type: string
+      requestBody:
+        $ref: '#/components/requestBodies/Lot'
+      responses:
+        '200':
+          description: Pharmaceutical issued
+        '406':
+          description: the request is invalid
+  '/products/daily-distribution':
+    get:
+      tags:
+        - Daily Product Distribution Report
+      summary:  Daily Product Distribution 
+      parameters:
+        - name: from
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: to
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: importLocation
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: results matching criteria
+  '/products/imported':
+    get:
+      tags:
+        - Imported Product Report
+      summary:  Imported Product 
+      parameters:
+        - name: from
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: to
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: importLocation
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: results matching criteria
+  '/orders':
+    get:
+      tags:
+        - Stock Order Processing
+      summary: get all Stock Orders
+      parameters:
+        - name: user
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: processingLocation
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: hospital
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: statuses
+          in: query
+          required: false
+          schema:
+            type: string
+          example: 'orders/?statuses=0&statuses=9'
+      responses:
+        '200':
+          description: results matching criteria
+    post:
+      tags:
+        - Stock Order Processing
+      summary: create a new order
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Order'
+      responses:
+        '200':
+          description: success
+        '404':
+          description: Order not found
+        '406':
+          description: the request is invalid
+  '/orders/{orderID}/order-detail/':
+    get:
+      tags:
+        - Stock Order Processing
+      summary: get stock order detail for display
+      parameters:
+        - name: orderID
+          in: path
+          required: true
+          schema:
+            minimum: 1
+            type: integer
+      responses:
+        '200':
+          description: success
+        '404':
+          description: Order not found
+  '/orders/{orderID}':
+    get:
+      tags:
+        - Stock Order Processing
+      summary: get stock order by ID
+      parameters:
+        - name: orderID
+          in: path
+          required: true
+          schema:
+            minimum: 1
+            type: integer
+      responses:
+        '200':
+          description: success
+        '404':
+          description: Order not found
+    patch:
+      tags:
+        - Stock Order Processing
+      summary: update an order
+      parameters:
+        - name: orderID
+          in: path
+          required: true
+          schema:
+            minimum: 1
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Order'
+      responses:
+        '200':
+          description: success
+        '404':
+          description: Order not found
+        '406':
+          description: the request is invalid
+    delete:
+      tags:
+        - Stock Order Processing
+      summary: delete an order
+      parameters:
+        - name: orderID
+          in: path
+          required: true
+          schema:
+            minimum: 1
+            type: string
+      responses:
+        '200':
+          description: success
+        '404':
+          description: Box not found
+        '406':
+          description: the request is invalid
+  '/distribution-requests':
+    get:
+      tags:
+        - Order Distribution
+      summary: get all call requests
+      parameters:
+        - name: location
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: assigned
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: results matching criteria
+        '404':
+          description: Not found
+  '/distribution-requests/{callNumber}':
+    get:
+      tags:
+        - Order Distribution
+      summary: get call request by call number
+      parameters:
+        - name: callNumber
+          in: path
+          required: true
+          schema:
+            minimum: 1
+            type: string
+      responses:
+        '200':
+          description: results matching criteria
+        '404':
+          description: Not found
+    patch:
+      tags:
+        - Order Distribution
+      summary: update a distribution request. Add/remove orders
+      parameters:
+        - name: callNumber
+          in: path
+          required: true
+          schema:
+            minimum: 1
+            type: string
+      # requestBody:
+      #   required: true
+      #   content:
+      #     application/json:
+      #       schema:
+      #         $ref: '#/components/schemas/Order'
+      responses:
+        '200':
+          description: success
+        '404':
+          description: Order not found
+        '406':
+          description: the request is invalid
+components:
+  schemas:
+    PatientInquiry:
+      type: object
+      properties:
+        patient:
+          $ref: '#/components/schemas/Patient'
+        historyFlags:
+          $ref: '#/components/schemas/HistoryFlags'
+    ShippedDetail:
+      type: object
+      properties:
+        shipmentDate:
+          type: string
+          format: date
+        product:
+          type: string
+        orders:
+          type: array
+          items:
+            $ref: '#/components/schemas/Order'
+    TransfustionHistoryItem:
+      type: object
+      properties:
+        shipmentDate:
+          type: string
+          format: date
+        Unit:
+          type: string
+        Product:
+          type: string
+        Suffix:
+          type: string
+        Hospital:
+          type: string
+        Physician:
+          type: string
+        Indic:
+          type: string
+        ReplCreditDate:
+          type: string
+          format: date
+    Patient:
+      required:
+        - id
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 123
+        lastName:
+          type: string
+          example: Public
+        firstName:
+          type: string
+          example: Joe
+        middleName:
+          type: string
+          example: Q
+        nameSuffix:
+          type: string
+          example: JR
+        ssn:
+          type: integer
+          example: 123456789012345
+        sex:
+          type: string
+          example: M
+        birthDate:
+          type: string
+          format: date
+          example: '1970-04-15'
+        bloodType:
+          type: string
+          example: APOS
+        age:
+          type: integer
+          example: 25
+        address:
+          type: string
+          example: 1st St
+        address2:
+          type: string
+          example: Ct E
+        city:
+          type: string
+          example: Auburn
+        hospital:
+          type: string
+          example: TACO
+        hospitalID:
+          type: string
+          example: '1234567890'
+        phone:
+          type: string
+          example: '2533331234'
+        lastSpecimen:
+          type: string
+          example: A234567
+        specimenExpires:
+          type: string
+          format: date
+          example: '2020-12-15'
+        lastOrderNumber:
+          type: integer
+          example: 1234567
+        lastOrderDate:
+          type: string
+          format: date
+          example: '2019-12-15'
+
+    Order:
+      type: object
+      properties:
+        orderId:
+          type: integer
+          format: int64
+        ordertype:
+          type: string
+          description: Order type
+          enum:
+            - 'patient order'
+            - 'stock'
+            - 'reference'
+            - 'supply'
+        cancelRequest:
+          type: boolean
+          default: false     
+        orderer:
+          type: object
+          example: ordering hospital
+        orderDate:
+          type: string
+          format: date-time
+        shipFrom:
+          type: object
+          example: shipping hospital
+        toTransfuse:
+          type: boolean
+          default: false
+        standing:
+          type: boolean
+          default: false
+        standingSchedule:
+          type: array
+          items:
+            type: object
+        patient:
+          type: object
+        roomId:
+          type: string
+        bedId:
+          type: string
+        physician:
+          type: string  
+        diagnostic_code:
+          type: string  
+        diagnosis:
+          type: string  
+        requiredDate:
+          type: string
+          format: date-time
+        transfusionDate:
+          type: string
+          format: date-time    
+        processingLocation:
+          type: object
+        status:
+          type: string
+          description: Order Status
+          enum:
+            - new
+            - in process
+            - partial packed
+            - packed
+            - partial issue
+            - issued
+            - partial ship
+            - shipped
+            - reference testing complete
+            - partial ship cancel
+            - remote error
+        testStatus:
+          type: string
+          description: test Status
+          enum:
+            - incomplete
+            - accepted
+            - rejected
+        orderItem:
+          type: array
+          items: 
+            $ref: '#/components/schemas/OrderItem'
+        # orderComment:
+        #   $ref: '#/components/schemas/OrderComment'
+      xml:
+        name: Order
+    OrderItem:
+      type: object
+      properties:
+        orderId:
+          type: integer
+          format: int64
+        orderItemId:
+          type: integer
+          format: int64
+        product:
+          type: string
+        processes:
+          type: array
+          items: 
+            $ref: '#/components/schemas/ProcessReq'
+        tests:
+          type: array
+          items: 
+            $ref: '#/components/schemas/TestReq'
+        units:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrderUnit'
+        bloodType:
+          type: string
+        qtyOrdered:
+          type: integer
+          format: int64
+        qtyReserved:
+          type: integer
+          format: int64
+        qtyFilled:
+          type: integer
+          format: int64
+        qtyIssued:
+          type: integer
+          format: int64
+        qtyShipped:
+          type: integer
+          format: int64   
+        qtyCanceled:
+          type: integer
+          format: int64  
+        qtyReturned:
+          type: integer
+          format: int64  
+        qtyReleased:
+          type: integer
+          format: int64  
+        qtyTransfused:
+          type: integer
+          format: int64  
+        backordered:
+          type: boolean
+          default: false
+    ProcessReq:
+      type: object
+      properties:
+        orderId:
+          type: integer
+          format: int64
+        orderItemId:
+          type: integer
+          format: int64
+        processId:
+          type: integer
+          format: int64
+        processCode:
+          type: string
+      xml:
+        name: ProcessReq
+    TestReq:
+      type: object
+      properties:
+        orderId:
+          type: integer
+          format: int64
+        orderItemId:
+          type: integer
+          format: int64
+        testCode:
+          type: string
+      xml:
+        name: TestReq
+    OrderUnit:
+      type: object
+      properties:
+        orderId:
+          type: integer
+          format: int64
+        orderItemId:
+          type: integer
+          format: int64
+        sequenceId:
+          type: integer
+          format: int64
+        processingLocation:
+          type: string
+        unitId:
+          type: string
+        productId:
+          type: string
+        aliquot:
+          type: string
+        testStatus:
+          type: string
+          description: test status 
+          enum:
+            - 'incomplete'
+            - 'accepted'
+            - 'rejected'
+        packStatus:
+          type: string
+          description: pack status 
+          enum:
+            - 'incomplete'
+            - 'regular'
+            - 'emergency'
+            - 'interim'
+            - 'override'
+        issuedStatus:
+          type: string
+          description: pack status 
+          enum:
+            - 'inactive'
+            - 'regular'
+            - 'emergency'
+            - 'interim'
+            - 'override'
+        shippedStatus:
+          type: string
+          description: pack status 
+          enum:
+            - 'inactive'
+            - 'regular'
+            - 'emergency'
+            - 'override'
+        returned:
+          type: boolean
+          default : false
+        shipTicket:
+          type: integer
+          format: int64
+        patientId:
+          type: integer
+          format: int64
+        shipDate:
+          type: string
+          format: date-time  
+      xml:
+        name: OrderUnit
+    ProductSummary:
+      required:
+        - orderNumber
+      type: object
+      properties:
+        shipDate:
+          type: string
+          format: date
+          example: '2020-10-05'
+        product:
+          type: string
+          example: ZWB
+        packedCount:
+          type: integer
+          example: 4
+        issuedCount:
+          type: integer
+          example: 3
+        shippedCount:
+          type: integer
+          example: 2
+        returnedCount:
+          type: integer
+          example: 1
+    HistoryFlags:
+      type: object
+      properties:
+        autologous:
+          type: string
+          example: 'Y'
+        directed:
+          type: string
+          example: 'N'
+        designated:
+          type: string
+          example: 'Y'
+        dedicated:
+          type: string
+          example: 'N'
+        comments:
+          type: string
+          example: 'Y'
+        angtigens:
+          type: string
+          example: 'N'
+        antibodies:
+          type: string
+          example: 'Y'
+        ProcessRequirement:
+          type: string
+          example: 'N'
+        transfustionReactions:
+          type: string
+          example: 'Y'
+        testRequirement:
+          type: string
+          example: 'N'
+    Product:
+      type: object
+      properties:
+        unit:
+          description: Unit
+          type: string
+          example: 'W234567890123'
+        product:
+          description: product code
+          type: string
+        suffix:
+          type: string
+        fromLocation:
+          type: string
+        toLocation:
+          type: string
+  requestBodies:
+    Products:
+      description: Product to be distributed
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+                $ref: '#/components/schemas/Product'
+      required: true
+    Lot:
+      description: a pharmaceutical lot
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              location:
+                type: string
+              product:
+                type: string
+              lotNumber:
+                type: string
+              shipTo:
+                type: string
+              billTo:
+                type: string
+              quantity:
+                type: integer
+              price:
+                type: number
